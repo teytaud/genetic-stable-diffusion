@@ -1,3 +1,26 @@
+# Modified evolutionary version.
+
+Install as usual (below).
+Then use the "pipeline_stable_diffusion.py" in lieu of the original pipeline_stable_diffusion.py found at 
+<< python -c "import diffusers ; print(diffusers.__file__)" >>.
+Then edit the prompt in multi_minisd.sh.
+Then
+ ./multi_minisd.sh
+
+and follow requests.
+The code is not very user-friendly, if there are users I'll do better.
+
+Scripts:
+- archimulti_minisd.sh  runs a selection of prompts, for testing purpose.
+- edit.sh               will not work on your install: this is a convenience script for editing the code inside the conda environment, you have to update the path.
+- inoculate_evo_sd.sh   same as multi_minisd.sh, but not from scratch. You have to check the code for understanding, or ping me.
+- minisd.sh             runs stable diffusion,
+- multi_minisd.sh       main script. Run stable diffusion multiple times, and asks for your feedback.
+- multiminisd.sh:       run plenty of tests with various genetic methods. Used for tuning. Takes forever to run.
+- view_history.sh:      view what is in progress and put the last generated images in a single output.png
+
+
+
 # Stable Diffusion
 *Stable Diffusion was made possible thanks to a collaboration with [Stability AI](https://stability.ai/) and [Runway](https://runwayml.com/) and builds upon our previous work:*
 
