@@ -1,25 +1,58 @@
-# Modified evolutionary version.
+# Genetic Stable Diffusion.
 
-Install as usual (below).
-Then use the "pipeline_stable_diffusion.py" in lieu of the original pipeline_stable_diffusion.py found at 
-<< python -c "import diffusers ; print(diffusers.__file__)" >>.
-Then edit the prompt in multi_minisd.sh.
-Then
- ./multi_minisd.sh
+This fork of Stable Diffusion uses genetic stuff and a graphical user interface.
+It also works in many languages (tested: French and German, should be ok for many more).
+It generates many images.
+It should work directly on Mac M1.
+It should be easy to adap to a machine with GPU.
+Without GPU it will be more complicated.
+Ping us at the Nevergrad user group if you need help, I'll do my best.
+[**Nevergrad Users**](https://www.facebook.com/groups/nevergradusers/)<br/>
 
-and follow requests.
-The code is not very user-friendly, if there are users I'll do better.
+## Install StableDiffusion as usual, plus a few more stuff.  Basically:
 
-Scripts:
-- archimulti_minisd.sh  runs a selection of prompts, for testing purpose.
-- edit.sh               will not work on your install: this is a convenience script for editing the code inside the conda environment, you have to update the path.
-- inoculate_evo_sd.sh   same as multi_minisd.sh, but not from scratch. You have to check the code for understanding, or ping me.
-- minisd.sh             runs stable diffusion,
-- multi_minisd.sh       main script. Run stable diffusion multiple times, and asks for your feedback.
-- multiminisd.sh:       run plenty of tests with various genetic methods. Used for tuning. Takes forever to run.
-- view_history.sh:      view what is in progress and put the last generated images in a single output.png
+```
+conda env create -f environment.yaml
+conda activate ldm    # you can change that name in the environment.yaml file...
+conda install pytorch torchvision -c pytorch
+pip install transformers diffusers invisible-watermark
+pip install pygame
+pip install webbrowser
+pip install nevergrad
+pip install deep-translator
+pip install -e .
+```
 
+## Hack diffusers (yes I should do that differently... only solution for now).
+Copy the file "pipeline_stable_diffusion.py" in lieu of the original pipeline_stable_diffusion.py.
 
+How to do this ?
+ First, find where ``diffusers'' is:
+```
+ python -c "import diffusers ; print(diffusers.__file__)"
+```
+and pipeline_stable_diffusion should at this location + "/pipelines/stable_diffusion/pipeline_stable_diffusion.py"
+or inside python
+```
+import diffusers
+print(diffusers.__file__)
+```
+
+ Then copy the local file there as follows:
+```
+cp pipeline_stable_diffusion.py <<that_directory/pipelines/stable_diffusion/>>/pipeline_stable_diffusion.py
+```
+You can also do a symbolic link:
+```
+pushd <<the_directory_of_diffusers_which_contains_pipeline_stable_diffusion.py>>
+mv pipeline_stable_diffusion.py backup_pipeline_stable_diffusion.py
+ln -s <<the_installation_directory>>/pipeline_stable_diffusion.py .
+```
+
+## Then run << python minisd.py >>.
+You should be asked for a prompt (just <<enter>> if you like the proposed hardcoded prompt), and then a window should be opened.
+
+## Send feedback to [**Nevergrad Users**](https://www.facebook.com/groups/nevergradusers/)<br/>
 
 # Stable Diffusion
 *Stable Diffusion was made possible thanks to a collaboration with [Stability AI](https://stability.ai/) and [Runway](https://runwayml.com/) and builds upon our previous work:*
