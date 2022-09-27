@@ -3,12 +3,15 @@ import os
 import torch
 import numpy as np
 import shutil
+import PIL
+from PIL import Image
+from einops import rearrange, repeat
 from torch import autocast
 from diffusers import StableDiffusionPipeline
 import webbrowser
 from deep_translator import GoogleTranslator
 from langdetect import detect
-
+os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
 model_id = "CompVis/stable-diffusion-v1-4"
 #device = "cuda"
 device = "mps" #torch.device("mps")
@@ -83,8 +86,8 @@ prompt = "Beautiful bizarre woman."
 prompt = "Yann LeCun as the grim reaper: bizarre art."
 prompt = "A star with flashy colors."
 prompt = "Un chat en sang et en armure joue de la batterie."
-prompt = "Judith beheading Holofernes."
-prompt = "Woman beheading a man: cyberpunk style."
+prompt = "Cyberpunk photographic version of Judith beheading Holofernes."
+prompt = "Photo of a cyberpunk Mark Zuckerberg killing Cthulhu with a light saber."
 print(f"The prompt is {prompt}")
 
 print(f"Francais: Proposez un nouveau texte si vous ne voulez pas dessiner << {prompt} >>.\n")
@@ -128,6 +131,26 @@ Y = 900
 scrn = pygame.display.set_mode((1700, Y + 100))
 font = pygame.font.Font('freesansbold.ttf', 22)
 
+image_name = input(to_native("Name of image for starting ? (enter if no start image)"))
+def load_img(path):
+    image = Image.open(path).convert("RGB")
+    w, h = image.size
+    print(f"loaded input image of size ({w}, {h}) from {path}")
+    w, h = map(lambda x: x - x % 32, (w, h))  # resize to integer multiple of 32
+    image = image.resize((w, h), resample=PIL.Image.LANCZOS)
+    image = np.array(image).astype(np.float32) / 255.0
+    image = image[None].transpose(0, 3, 1, 2)
+    image = torch.from_numpy(image)
+    return 2.*image - 1.
+
+if len(image_name) > 0:
+    import torchvision
+    #forced_latent = pipe.get_latent(torchvision.io.read_image(image_name).float())
+    model = pipe.vae
+    init_image = load_img(image_name).to(device)
+    init_image = repeat(init_image, '1 ... -> b ...', b=1)
+    #forced_latent = model.get_first_stage_encoding(model.encode_first_stage(init_image))
+    forced_latent = model.encode(init_image)
 
 for iteration in range(30):
     #scrn.fill(black)
@@ -231,11 +254,12 @@ for iteration in range(30):
     scrn.blit(text4, (300, Y + 30))
     pygame.display.flip()
 
-    for idx in range(llambda):
-        # set the pygame window name
-        pygame.display.set_caption(prompt)
-        imp = pygame.transform.scale(pygame.image.load(onlyfiles[idx]).convert(), (300, 300))
-        scrn.blit(imp, (300 * (idx // 3), 300 * (idx % 3)))
+    if len(early_stop) == 0:
+        for idx in range(llambda):
+            # set the pygame window name
+            pygame.display.set_caption(prompt)
+            imp = pygame.transform.scale(pygame.image.load(onlyfiles[idx]).convert(), (300, 300))
+            scrn.blit(imp, (300 * (idx // 3), 300 * (idx % 3)))
      
     # paint screen one time
     pygame.display.flip()
@@ -304,7 +328,7 @@ for iteration in range(30):
             # if event object type is QUIT
             # then quitting the pygame
             # and program both.
-            if i.type == pygame.QUIT:
+            if len(early_stop) > 0 or i.type == pygame.QUIT:
                 status = False
      
     # Using draw.rect module of
