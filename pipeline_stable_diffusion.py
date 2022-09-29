@@ -225,7 +225,9 @@ class StableDiffusionPipeline(DiffusionPipeline):
                 print("we get a forcing for the latent z.")
                 speedup = 1
                 latents = np.array(eval(os.environ["forcedlatent"])).flatten()
-                latents = np.sqrt(len(latents)) * latents / np.sqrt(np.sum(latents ** 2))
+                #latents = latents + np.exp(0.1 * np.random.randn()) * np.random.rand(len(latents))
+                #latents = np.sqrt(len(latents) / np.sum(latents ** 2)) * latents
+                #latents = np.sqrt(len(latents)) * latents / np.sqrt(np.sum(latents ** 2))
                 print(latents[:10])
                 print(f"immediately after loading latent ==> {sum(latents.flatten()**2) / len(latents.flatten())}")
                 latents = torch.from_numpy(latents.reshape((1,4,64,64))).float().to(latents_device)
@@ -233,8 +235,7 @@ class StableDiffusionPipeline(DiffusionPipeline):
             good = eval(os.environ["good"])
             bad = eval(os.environ["bad"])
             print(f"{len(good)} good and {len(bad)} bad")
-            i_believe_in_evolution = len(good) > 0 and len(bad) > 0
-            i_believe_in_evolution = False
+            i_believe_in_evolution = len(good) > 0 and len(bad) > 10
             print(f"I believe in evolution = {i_believe_in_evolution}")
             if i_believe_in_evolution: 
                 from sklearn import tree
@@ -265,9 +266,9 @@ class StableDiffusionPipeline(DiffusionPipeline):
                         #return clf.predict_proba([z+epsilon*x])[0][0]
                 
                 
-                if i_believe_in_evolution:
+                budget = int(os.environ.get("budget", "300"))
+                if i_believe_in_evolution and budget > 20:
                     import nevergrad as ng
-                    budget = int(os.environ.get("budget", "300"))
                     #nevergrad_optimizer = ng.optimizers.RandomSearch(len(z), budget)
                     #nevergrad_optimizer = ng.optimizers.RandomSearch(len(z), budget)
                     optim_class = ng.optimizers.registry[os.environ.get("ngoptim", "DiscreteLenglerOnePlusOne")]
@@ -322,6 +323,8 @@ class StableDiffusionPipeline(DiffusionPipeline):
             if latents.shape != latents_intermediate_shape:
                 raise ValueError(f"Unexpected latents shape, got {latents.shape}, expected {latents_intermediate_shape}")
         print(f"latent ==> {sum(latents.flatten()**2) / len(latents.flatten())}")
+        print(f"latent ==> {torch.max(latents)}")
+        print(f"latent ==> {torch.min(latents)}")
         os.environ["latent_sd"] = str(list(latents.flatten().cpu().numpy()))
         for i in [2, 3]:
             latents = torch.repeat_interleave(latents, repeats=latents_shape[i] // latents_intermediate_shape[i], dim=i) #/ np.sqrt(np.sqrt(latents_shape[i] // latents_intermediate_shape[i]))
@@ -371,7 +374,7 @@ class StableDiffusionPipeline(DiffusionPipeline):
                 latents = self.scheduler.step(noise_pred, t, latents, **extra_step_kwargs).prev_sample
 
         # scale and decode the image latents with vae
-        os.environ["latent_sd"] = str(list(latents.flatten().cpu().detach().numpy()))
+        #os.environ["latent_sd"] = str(list(latents.flatten().cpu().detach().numpy()))
         latents = 1 / 0.18215 * latents
         image = self.vae.decode(latents).sample
 
