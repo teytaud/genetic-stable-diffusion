@@ -363,6 +363,7 @@ class StableDiffusionPipeline(DiffusionPipeline):
                 latent_model_input = latent_model_input / ((sigma**2 + 1) ** 0.5)
 
             # predict the noise residual
+            print(f"text_embeddings.shape={text_embeddings.shape}")
             noise_pred = self.unet(latent_model_input, t, encoder_hidden_states=text_embeddings).sample
 
             # perform guidance
