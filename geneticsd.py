@@ -1,4 +1,4 @@
-assert False, "Deprecated! Use geneticsd.py instead."
+# A ton of imports.
 import random
 import os
 import time
@@ -17,10 +17,15 @@ from joblib import Parallel, delayed
 import torch
 from PIL import Image
 from RealESRGAN import RealESRGAN
+import pyttsx3
+import pyfiglet
+import pygame
+from os import listdir
+from os.path import isfile, join
 
+# Let's parametrize a few things.
 os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
 model_id = "CompVis/stable-diffusion-v1-4"
-#device = "cuda"
 device = "mps" #torch.device("mps")
 
 white = (255, 255, 255)
@@ -36,37 +41,41 @@ os.environ["decay"] = "0."
 os.environ["ngoptim"] = "DiscreteLenglerOnePlusOne"
 os.environ["forcedlatent"] = ""
 latent_forcing = ""
-#os.environ["enforcedlatent"] = ""
 os.environ["good"] = "[]"
 os.environ["bad"] = "[]"
 num_iterations = 50
 gs = 7.5
+sentinel = str(random.randint(0,100000)) + "XX" +  str(random.randint(0,100000))
+all_files = []
+llambda = 15
 
-
-
-import pyttsx3
-
+# Creating the voice engine.
 noise = pyttsx3.init()
 noise.setProperty("rate", 240)
-noise.setProperty('voice', 'mb-us1')                                            
-
-#voice = noise.getProperty('voices')
-#for v in voice:
-#    if v.name == "Kyoko":
-#        noise.setProperty('voice', v.id)
+def speak(text):
+     noise.say(text)
+     noise.runAndWait()
 
 
-all_selected = []
-all_selected_latent = []
-final_selection = []
-forcedlatents = []
-forcedgs = []
+# Initialization.
+all_selected = []        # List of all selected images, over all the run.
+all_selected_latent = [] # The corresponding latent variables.
+final_selection = []     # Selection of files during the final iteration.
+forcedlatents = []       # Latent variables that we want to see soon.
+forcedgs = []            # forcedgs[i] is the guidance strength that we want to see for image number i.
+assert llambda < 16, "lambda < 16 for convenience in pygame."
+bad = []
+five_best = []
+latent = []
+images = []
+onlyfiles = []
 
-
-assert False, "Please create a token at https://huggingface.co/login?next=%2Fsettings%2Ftokens and put it below. Then, remove this line."
-pipe = StableDiffusionPipeline.from_pretrained(model_id, use_auth_token="XXXXX")
+# Creating the main pipeline.
+pipe = StableDiffusionPipeline.from_pretrained(model_id, use_auth_token="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")
 pipe = pipe.to(device)
 
+ 
+# A ton of prompts, for fun.
 prompt = "a photo of an astronaut riding a horse on mars"
 prompt = "a photo of a red panda with a hat playing table tennis"
 prompt = "a photorealistic portrait of " + random.choice(["Mary Cury", "Scarlett Johansson", "Marilyn Monroe", "Poison Ivy", "Black Widow", "Medusa", "Batman", "Albert Einstein", "Louis XIV", "Tarzan"]) + random.choice([" with glasses", " with a hat", " with a cigarette", "with a scarf"])
@@ -84,7 +93,6 @@ prompt = random.choice([
 
 
 name = random.choice(["Mark Zuckerbeg", "Zendaya", "Yann LeCun", "Scarlett Johansson", "Superman", "Meg Myers"])
-name = "Zendaya"
 prompt = f"Photo of {name} as a sumo-tori."
 
 prompt = "Full length portrait of Mark Zuckerberg as a Sumo-Tori."
@@ -97,10 +105,7 @@ prompt = "Meg Myers grabbing a vampire by the scruff of the neck."
 prompt = "Mark Zuckerberg chokes a vampire to death."
 prompt = "Mark Zuckerberg riding an animal."
 prompt = "A giant cute animal worshipped by zombies."
-
-
 prompt = "Several faces."
-
 prompt = "An armoured Yann LeCun fighting tentacles in the jungle."
 prompt = "Tentacles everywhere."
 prompt = "A photo of a smiling Medusa."
@@ -110,7 +115,6 @@ prompt = "A red-haired woman with red hair. Her head is tilted."
 prompt = "A bloody heavy-metal zombie with a chainsaw."
 prompt = "Tentacles attacking a bloody Meg Myers in Eyptian dress. Meg Myers has a chainsaw."
 prompt = "Bizarre art."
-
 prompt = "Beautiful bizarre woman."
 prompt = "Yann LeCun as the grim reaper: bizarre art."
 prompt = "Un chat en sang et en armure joue de la batterie."
@@ -143,19 +147,18 @@ prompt = "A photo of Meg Myers laughing and pulling Gandalf's hair. Gandalf is s
 prompt = "A star with flashy colors."
 prompt = "Portrait of a green haired woman with blue eyes."
 prompt = "Portrait of a female kung-fu master."
-prompt = "In a dark cave, in the middle of computers, a geek meets the devil."
+prompt = "In a dark cave, in the middle of computers, a bearded red-haired geek with squared glasses meets the devil."
+prompt = "Photo of the devil, with horns. There are flames in the background."
 print(f"The prompt is {prompt}")
 
 
-import pyfiglet
 print(pyfiglet.figlet_format("Welcome in Genetic Stable Diffusion !"))
 print(pyfiglet.figlet_format("First, let us choose the text :-)!"))
 
 
 
 print(f"Francais: Proposez un nouveau texte si vous ne voulez pas dessiner << {prompt} >>.\n")
-noise.say("Hey!")
-noise.runAndWait()
+speak("Hey!")
 user_prompt = input(f"English: Enter a new prompt if you prefer something else than << {prompt} >>.\n")
 if len(user_prompt) > 2:
     prompt = user_prompt
@@ -163,7 +166,6 @@ if len(user_prompt) > 2:
 # On the fly translation.
 language = detect(prompt)
 english_prompt = GoogleTranslator(source='auto', target='en').translate(prompt)
-
 def to_native(stri):
     return GoogleTranslator(source='en', target=language).translate(stri)
 
@@ -172,6 +174,8 @@ def pretty_print(stri):
 
 print(f"{to_native('Working on')} {english_prompt}, a.k.a {prompt}.")
 
+
+# Converting a latent var to an image.
 def latent_to_image(latent):
     os.environ["forcedlatent"] = str(list(latent.flatten()))  #str(list(forcedlatents[k].flatten()))            
     with autocast("cuda"):
@@ -179,7 +183,7 @@ def latent_to_image(latent):
     os.environ["forcedlatent"] = "[]"
     return image
 
-
+# Creating the super-resolution stuff. RealESRGAN is fantastic!
 sr_device = torch.device('cpu') #device #('mps')   #torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 esrmodel = RealESRGAN(sr_device, scale=4)
 esrmodel.load_weights('weights/RealESRGAN_x4.pth', download=True)
@@ -196,8 +200,8 @@ def singleeg(path_to_image):
     sr_image.save(output_filename)
     return output_filename
 
+# A version with x2.
 def singleeg2(path_to_image):
-    time.sleep(0.5*np.random.rand())
     image = Image.open(path_to_image).convert('RGB')
     sr_device = device #('mps')   #torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"Type before SR = {type(image)}")
@@ -208,11 +212,11 @@ def singleeg2(path_to_image):
     return output_filename
 
 
+# realESRGan applied to many files.
 def eg(list_of_files):
     pretty_print("Should I convert images below to high resolution ?")
     print(list_of_files)
-    noise.say("Go to the text window!")
-    noise.runAndWait()
+    speak("Go to the text window!")
     answer = input(" [y]es / [n]o ?")
     if "y" in answer or "Y" in answer:
         #images = Parallel(n_jobs=12)(delayed(singleeg)(image) for image in list_of_files)
@@ -221,6 +225,7 @@ def eg(list_of_files):
             output_filename = singleeg(path_to_image)
             print(to_native(f"Created the super-resolution file {output_filename}")) 
 
+# When we stop the run and check and propose to do super-resolution and/or animations.
 def stop_all(list_of_files, list_of_latent, last_list_of_latent):
     print(to_native("Your selected images and the last generation:"))
     print(list_of_files)
@@ -252,28 +257,8 @@ def stop_all(list_of_files, list_of_latent, last_list_of_latent):
                      image.save(image_name)
                      images += [image_name]
                      
-#                for u in np.linspace(0., 1., num_animation_steps):
-#                    index += 1
-#                    image = latent_to_image(u*l1 + (1-u)*l)
-#                    image_name = f"imgA{index}.png"
-#                    image.save(image_name)
-#                    images += [image_name]
-#                for u in np.linspace(0., 1., num_animation_steps):
-#                    index += 1
-#                    image = latent_to_image(u*l2 + (1-u)*l1)
-#                    image_name = f"imgB{index}.png"
-#                    image.save(image_name)
-#                    images += [image_name]
-#                for u in np.linspace(0., 1.,num_animation_steps):
-#                    index += 1
-#                    image = latent_to_image(u*l + (1-u)*l2)
-#                    image_name = f"imgC{index}.png"
-#                    image.save(image_name)
-#                    images += [image_name]
                 print(to_native(f"Base images created for perturbation={c} and file {list_of_files[idx]}"))
-                #images = Parallel(n_jobs=8)(delayed(process)(i) for i in range(10))
                 images = Parallel(n_jobs=10)(delayed(singleeg2)(image) for image in images)
-
                 frames = [Image.open(image) for image in images]
                 frame_one = frames[0]
                 gif_name = list_of_files[idx] + "_" + str(c) + ".gif"
@@ -290,24 +275,8 @@ def stop_all(list_of_files, list_of_latent, last_list_of_latent):
     exit()
 
 
-import os
-import pygame
-from os import listdir
-from os.path import isfile, join
       
-sentinel = str(random.randint(0,100000)) + "XX" +  str(random.randint(0,100000))
 
-all_files = []
-
-llambda = 15
-
-assert llambda < 16, "lambda < 16 for convenience in pygame."
-
-bad = []
-five_best = []
-latent = []
-images = []
-onlyfiles = []
 
 pretty_print("Now let us choose (if you want) an image as a start.")
 image_name = input(to_native("Name of image for starting ? (enter if no start image)"))
@@ -363,6 +332,7 @@ def randomized_image_to_latent(image_name, scale=None, epsilon=None, c=None, f=N
     #image.save(f"rebuild_{f}_{scale}_{epsilon}_{c}.png")
     return new_fl
 
+# In case the user wants to start from a given image.
 if len(image_name) > 0:
     pretty_print("Importing an image !")
     try:
@@ -373,15 +343,12 @@ if len(image_name) > 0:
         image_name = input(to_native("Name of image for starting ? (enter if no start image)"))
         
     base_init_image = load_img(image_name).to(device)
-    noise.say("Image loaded")
-    noise.runAndWait()
+    speak("Image loaded!")
     print(base_init_image.shape)
     print(np.max(base_init_image.cpu().detach().numpy().flatten()))
     print(np.min(base_init_image.cpu().detach().numpy().flatten()))
     
     forcedlatents = []
-    divider = 1.5
-    latent_found = False
     try:
         latent_file = image_name + ".latent.txt"
         print(to_native(f"Trying to load latent variables in {latent_file}."))
@@ -390,79 +357,39 @@ if len(image_name) > 0:
         latent_str = f.read()
         print("Latent string read.")
         latent_found = True
+        for i in range(llambda):
+            basic_new_fl = np.asarray(eval(latent_str))
+            if i > 0:
+                basic_new_fl = f * np.sqrt(len(new_fl) / np.sum(basic_new_fl**2)) * basic_new_fl
+                epsilon = .7 * ((i-1)/(llambda-1)) #1.0 / 2**(2 + (llambda - i) / 6)
+                #print(f"{i} -- {i % 7} {c} {f} {epsilon}")
+                new_fl = (1. - epsilon) * basic_new_fl + epsilon * np.random.randn(1*4*64*64)
+            else:
+                new_fl = basic_new_fl
+            new_fl = 6. * np.sqrt(len(new_fl)) * new_fl / np.sqrt(np.sum(new_fl ** 2))
+            forcedlatents += [new_fl]
     except:
         print(to_native("No latent file: guessing."))
-    for i in range(llambda):
-        new_base_init_image = base_init_image
-        if not latent_found: # In case of latent vars we need less exploration.
-            if (i % 7)  == 1:
-                new_base_init_image[0,0,:,:] /= divider
-            if (i % 7) == 2:
-                new_base_init_image[0,1,:,:] /= divider
-            if (i % 7) == 3:
-                new_base_init_image[0,2,:,:] /= divider
-            if (i % 7) == 4:
-                new_base_init_image[0,0,:,:] /= divider
-                new_base_init_image[0,1,:,:] /= divider
-            if (i % 7) == 5:
-                new_base_init_image[0,1,:,:] /= divider
-                new_base_init_image[0,2,:,:] /= divider
-            if (i % 7) == 6:
-                new_base_init_image[0,0,:,:] /= divider
-                new_base_init_image[0,2,:,:] /= divider
-           
-        c = np.exp(np.random.randn() - 5)
-        f = np.exp(-3. * np.random.rand())
-        init_image_shape = base_init_image.cpu().numpy().shape
-        if i > 0 and not latent_found:
-            init_image = new_base_init_image + torch.from_numpy(c * np.random.randn(np.prod(init_image_shape))).reshape(init_image_shape).float().to(device)
-        else:
-            init_image = new_base_init_image
-        init_image = repeat(init_image, '1 ... -> b ...', b=1)
-        if latent_found:
-            new_fl = np.asarray(eval(latent_str))
-            assert len(new_fl) > 1
-        else:
-            forced_latent = 1. * model.encode(init_image.to(device)).latent_dist.sample()
-            new_fl = forced_latent.cpu().detach().numpy().flatten()
-        basic_new_fl = new_fl  #np.sqrt(len(new_fl) / sum(new_fl ** 2)) * new_fl
-        #new_fl = forced_latent + (1. / 1.1**(llambda-i)) * torch.from_numpy(np.random.randn(1*4*64*64).reshape(1,4,64,64)).float().to(device)
-        #forcedlatents += [new_fl.cpu().detach().numpy()]
-        if i > 0:
-            #epsilon = 0.3 / 1.1**i
-            basic_new_fl = f * np.sqrt(len(new_fl) / np.sum(basic_new_fl**2)) * basic_new_fl
-            epsilon = .7 * ((i-1)/(llambda-1)) #1.0 / 2**(2 + (llambda - i) / 6)
-            print(f"{i} -- {i % 7} {c} {f} {epsilon}")
-            # 1 -- 1 0.050020045300292804 0.0790648688521246 0.0
-            new_fl = (1. - epsilon) * basic_new_fl + epsilon * np.random.randn(1*4*64*64)
-        else:
-            new_fl = basic_new_fl
-        new_fl = 6. * np.sqrt(len(new_fl)) * new_fl / np.sqrt(np.sum(new_fl ** 2))
-        forcedlatents += [new_fl] #np.clip(new_fl, -3., 3.)] #np.sqrt(len(new_fl) / sum(new_fl ** 2)) * new_fl]
-        forcedgs += [7.5]  #np.random.choice([7.5, 15.0, 30.0, 60.0])] TODO
-        #forcedlatents += [np.sqrt(len(new_fl) / sum(new_fl ** 2)) * new_fl]
-        #print(f"{i} --> {forcedlatents[i][:10]}")
+        for i in range(llambda):
+            forcedlatents += [randomized_image_to_latent(image_name)]  #img_to_latent(voronoi_name)
 
 # We start the big time consuming loop!
-for iteration in range(30):
+for iteration in range(3000):   # Kind of an infinite loop.
     latent = [latent[f] for f in five_best]
     images = [images[f] for f in five_best]
     onlyfiles = [onlyfiles[f] for f in five_best]
     early_stop = []
-    noise.say("WAIT!")
-    noise.runAndWait()
+    speak("Wait!")
     final_selection = []
     for k in range(llambda):
         if len(early_stop) > 0:
             break
         max_created_index = k
-        if len(forcedlatents) > 0 and k < len(forcedlatents):
-            #os.environ["forcedlatent"] = str(list(forcedlatents[k].flatten()))            
+        if k < len(forcedlatents):
             latent_forcing = str(list(forcedlatents[k].flatten()))
             print(f"We play with {latent_forcing[:20]}")
         if k < len(five_best):
             imp = pygame.transform.scale(pygame.image.load(onlyfiles[k]).convert(), (300, 300))
-            # Using blit to copy content from one surface to other
             scrn.blit(imp, (300 * (k // 3), 300 * (k % 3)))
             pygame.display.flip()
             continue
@@ -493,12 +420,6 @@ for iteration in range(30):
         os.environ["epsilon"] = str(0. if k == len(five_best) else (k - len(five_best)) / llambda)
         os.environ["budget"] = str(np.random.randint(400) if k > len(five_best) else 2)
         os.environ["skl"] = {0: "nn", 1: "tree", 2: "logit"}[k % 3]
-        #enforcedlatent = os.environ.get("enforcedlatent", "")
-        #if len(enforcedlatent) > 2:
-        #    os.environ["forcedlatent"] = enforcedlatent
-        #    os.environ["enforcedlatent"] = ""
-        #with autocast("cuda"):
-        #    image = pipe(english_prompt, guidance_scale=gs, num_inference_steps=num_iterations)["sample"][0]
         previous_gs = gs
         if k < len(forcedgs):
             gs = forcedgs[k]
@@ -510,25 +431,22 @@ for iteration in range(30):
         image.save(filename)
         onlyfiles += [filename]
         imp = pygame.transform.scale(pygame.image.load(onlyfiles[-1]).convert(), (300, 300))
-        # Using blit to copy content from one surface to other
         scrn.blit(imp, (300 * (k // 3), 300 * (k % 3)))
         pygame.display.flip()
-        #noise.say("Dong")
-        #noise.runAndWait()
-        print('\a')
+        print('\a')  # beep!
         str_latent = eval((os.environ["latent_sd"]))
         array_latent = eval(f"np.array(str_latent).reshape(4, 64, 64)")
         print(f"Debug info: array_latent sumsq/var {sum(array_latent.flatten() ** 2) / len(array_latent.flatten())}")
         latent += [array_latent]
         with open(filename + ".latent.txt", 'w') as f:
             f.write(f"{str_latent}")
-        # In case of early stopping.
+
+        # In case of early stopping, we stop the loop.
         first_event = True
         for i in pygame.event.get():
             if i.type == pygame.MOUSEBUTTONUP:
                 if first_event:
-                    noise.say("Ok I stop")
-                    noise.runAndWait()
+                    speak("Ok I stop!")
                     first_event = False
                 pos = pygame.mouse.get_pos()
                 index = 3 * (pos[0] // 300) + (pos[1] // 300)
@@ -542,19 +460,8 @@ for iteration in range(30):
                 early_stop = [(1,1)]
                 satus = False
     forcedgs = []
-    # Stop the forcing from disk!
-    #os.environ["enforcedlatent"] = ""
-    # importing required library
-    
-    #mypath = "./"
-    #onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
-    #onlyfiles = [str(f) for f in onlyfiles if "SD_" in str(f) and ".png" in str(f) and str(f) not in all_files and sentinel in str(f)]
-    #print()
-     
-    # create the display surface object
-    # of specific dimension..e(X, Y).
-    noise.say("Ok I'm ready! Choose")
-    noise.runAndWait()
+
+    speak("Please choose!")
     pretty_print("Please choose your images.")
     text0 = bigfont.render(to_native(f'Choose your favorite images !!!========='), True, green, blue)
     scrn.blit(text0, ((X*3/4)/2 - X/32, Y/2-Y/4))
@@ -697,8 +604,7 @@ for iteration in range(30):
                     #text3Rect.center = (750+750*3/4, 1000)
                     good += [list(latent[index].flatten())]
                 else:
-                    noise.say("Bad click! Click on image.")
-                    noise.runAndWait()
+                    speak("Bad click ! Click on an image.")
                     pretty_print("Bad click! Click on image.")
     
             if i.type == pygame.QUIT:
@@ -815,7 +721,7 @@ for iteration in range(30):
             else:
                 epsilon = ((0.5 * (a + .5 - len(good)) / (llambda - len(good) - 1)) ** 2)
                 forcedlatent = (1. - epsilon) * basic_new_fl.flatten() + epsilon * np.random.randn(4*64*64)
-                #forcedlatent = np.sqrt(len(forcedlatent) / np.sum(forcedlatent**2)) * forcedlatent
+                forcedlatent = np.sqrt(len(forcedlatent) / np.sum(forcedlatent**2)) * forcedlatent
                 forcedlatents += [forcedlatent]
     #for uu in range(len(latent)):
     #    print(f"--> latent[{uu}] sum of sq / variable = {np.sum(latent[uu].flatten()**2) / len(latent[uu].flatten())}")
