@@ -1,4 +1,3 @@
-assert False, "Deprecated! Use geneticsd.py instead."
 ###############   DEPRECATED: see geneticsd.py      import random
 ###############   DEPRECATED: see geneticsd.py      import os
 ###############   DEPRECATED: see geneticsd.py      import time
