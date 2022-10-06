@@ -72,7 +72,8 @@ images = []
 onlyfiles = []
 
 # Creating the main pipeline.
-pipe = StableDiffusionPipeline.from_pretrained(model_id, use_auth_token="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")
+assert False, "Please create a token at https://huggingface.co/login?next=%2Fsettings%2Ftokens and put it below. Then, remove this line."
+pipe = StableDiffusionPipeline.from_pretrained(model_id, use_auth_token="XXXXX")
 pipe = pipe.to(device)
 
  
