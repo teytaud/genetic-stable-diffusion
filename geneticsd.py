@@ -153,6 +153,9 @@ prompt = "In a dark cave, in the middle of computers, a bearded red-haired geek 
 prompt = "Photo of the devil, with horns. There are flames in the background."
 prompt = "Yann LeCun fighting Pinocchio with light sabers."
 prompt = "Yann LeCun attacks a triceratops with a lightsaber."
+prompt = "A cyberpunk man next to a cyberpunk woman."
+prompt = "A smiling woman with a Katana and electronic patches."
+prompt = "Photo of a bearded, long-haired man and a blonde-haired woman. Cats and drums and computers on shelves in the background."
 print(f"The prompt is {prompt}")
 
 
@@ -338,6 +341,7 @@ def randomized_image_to_latent(image_name, scale=None, epsilon=None, c=None, f=N
     new_fl = scale * np.sqrt(len(new_fl)) * new_fl / np.sqrt(np.sum(new_fl ** 2))
     #image = latent_to_image(np.asarray(new_fl)) #eval(os.environ["forcedlatent"])))
     #image.save(f"rebuild_{f}_{scale}_{epsilon}_{c}.png")
+    #gs=7.5, f=0.12, scale=3.7, epsilon=0.01,1 c=2.05
     return new_fl
 
 # In case the user wants to start from a given image.
@@ -413,7 +417,13 @@ for iteration in range(3000):   # Kind of an infinite loop.
         text0 = font.render(to_native(f'... ... ... '), True, green, blue)
         scrn.blit(text0, ((X*3/4)/2 - X/32, Y/2+Y/8))
 
-        # Button for early stopping
+        text1 = font.render(to_native('Undo: click <here> for '), True, green, blue)
+        text1 = pygame.transform.rotate(text2, 90)
+        scrn.blit(text1, (X*3/4+X/16+X/64 - X/32, Y/12))
+        text1 = font.render(to_native('resetting your clicks.'), True, green, blue)
+        text1 = pygame.transform.rotate(text2, 90)
+        scrn.blit(text1, (X*3/4+X/16+X/32 - X/32, Y/12))
+        # Button for quitting and effects
         text2 = font.render(to_native(f'Total: {len(all_selected)} chosen images! '), True, green, blue)
         text2 = pygame.transform.rotate(text2, 90)
         scrn.blit(text2, (X*3/4+X/16      - X/32, Y/3))
@@ -485,20 +495,24 @@ for iteration in range(3000):   # Kind of an infinite loop.
     pygame.draw.rect(scrn, red, pygame.Rect(0, Y, X/2, Y+100), 2)
 
     # Button for loading a starting point
-    text1 = font.render('Manually edit an image.', True, green, blue)
-    text1 = pygame.transform.rotate(text1, 90)
+    #text1 = font.render('Manually edit an image.', True, green, blue)
+    #text1 = pygame.transform.rotate(text1, 90)
     #scrn.blit(text1, (X*3/4+X/16 - X/32, 0))
     #text1 = font.render('& latent    ', True, green, blue)
     #text1 = pygame.transform.rotate(text1, 90)
     #scrn.blit(text1, (X*3/4+X/16+X/32 - X/32, 0))
 
-    # Button for creating a meme
+    # Button for stopping now.
     text2 = font.render(to_native('Click <here>,'), True, green, blue)
     text2 = pygame.transform.rotate(text2, 90)
     scrn.blit(text2, (X*3/4+X/16 - X/32, Y/3+10))
     text2 = font.render(to_native('for finishing with effects.'), True, green, blue)
     text2 = pygame.transform.rotate(text2, 90)
     scrn.blit(text2, (X*3/4+X/16+X/32 - X/32, Y/3+10))
+    text2 = font.render(to_native('or manually edit.'), True, green, blue)
+    text2 = pygame.transform.rotate(text2, 90)
+    scrn.blit(text2, (X*3/4+X/16+X/32 , Y/3+10))
+
     # Button for new generation
     text3 = font.render(to_native(f"I don't want to select images"), True, green, blue)
     text3 = pygame.transform.rotate(text3, 90)
@@ -572,9 +586,9 @@ for iteration in range(3000):   # Kind of an infinite loop.
                         #with open(filename, 'r') as f:
                         #     latent = f.read()
                         #break
-                        pretty_print("Easy! I exit now, you edit the file and you save it.")
-                        pretty_print("Then just relaunch me and provide the text and the image.")
-                        exit()
+                        #pretty_print("Easy! I exit now, you edit the file and you save it.")
+                        #pretty_print("Then just relaunch me and provide the text and the image.")
+                        #exit()
                     if pos[1] < 2*Y/3:
                         #onlyfiles = [f for f in listdir(".") if isfile(join(mypath, f))]
                         #onlyfiles = [str(f) for f in onlyfiles if "SD_" in str(f) and ".png" in str(f) and str(f) not in all_files and sentinel in str(f)]
@@ -731,7 +745,7 @@ for iteration in range(3000):   # Kind of an infinite loop.
             else:
                 epsilon = ((0.5 * (a + .5 - len(good)) / (llambda - len(good) - 1)) ** 2)
                 forcedlatent = (1. - epsilon) * basic_new_fl.flatten() + epsilon * np.random.randn(4*64*64)
-                forcedlatent = np.sqrt(len(forcedlatent) / np.sum(forcedlatent**2)) * forcedlatent
+                #forcedlatent = np.sqrt(len(forcedlatent) / np.sum(forcedlatent**2)) * forcedlatent REMOVED!!
                 forcedlatents += [forcedlatent]
     #for uu in range(len(latent)):
     #    print(f"--> latent[{uu}] sum of sq / variable = {np.sum(latent[uu].flatten()**2) / len(latent[uu].flatten())}")
