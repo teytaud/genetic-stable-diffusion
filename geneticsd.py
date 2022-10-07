@@ -12,7 +12,6 @@ from PIL import Image
 from einops import rearrange, repeat
 from torch import autocast
 from diffusers import StableDiffusionPipeline
-import webbrowser
 from deep_translator import GoogleTranslator
 from langdetect import detect
 from joblib import Parallel, delayed
@@ -158,6 +157,7 @@ prompt = "Yann LeCun attacks a triceratops with a lightsaber."
 prompt = "A cyberpunk man next to a cyberpunk woman."
 prompt = "A smiling woman with a Katana and electronic patches."
 prompt = "Photo of a bearded, long-haired man with glasses and a blonde-haired woman. Both are smiling. Cats and drums and computers on shelves in the background."
+prompt = "Photo of a nuclear mushroom in Paris."
 print(f"The prompt is {prompt}")
 
 
@@ -286,13 +286,13 @@ def stop_all(list_of_files, list_of_latent, last_list_of_files, last_list_of_lat
                 gif_name = list_of_files[idx] + "_" + str(c) + ".gif"
                 frame_one.save(gif_name, format="GIF", append_images=frames,
                       save_all=True, duration=100, loop=0)    
-                webbrowser.open(os.environ["PWD"] + "/" + gif_name)
+                #webbrowser.open(os.environ["PWD"] + "/" + gif_name)
     
-    pretty_print("Should we create a meme ?")
-    answer = input(" [y]es or [n]o ?")
-    if "y" in answer or "Y" in answer:
-        url = 'https://imgflip.com/memegenerator'
-        webbrowser.open(url)
+    #pretty_print("Should we create a meme ?")
+    #answer = input(" [y]es or [n]o ?")
+    #if "y" in answer or "Y" in answer:
+    #    url = 'https://imgflip.com/memegenerator'
+    #    webbrowser.open(url)
     pretty_print("Good bye!")
     exit()
 
