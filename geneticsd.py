@@ -51,6 +51,7 @@ gs = 7.5
 sentinel = str(random.randint(0,100000)) + "XX" +  str(random.randint(0,100000))
 all_files = []
 llambda = 15
+sigma = 1.
 
 # Creating the voice engine.
 noise = pyttsx3.init()
@@ -143,7 +144,7 @@ Output:
                 outputs += [basic_new_fl]
             else:
                 print("Perturbating the generation!")
-                epsilon = (( (a + .5 - len(good)) / (llambda - len(good) - 1)))
+                epsilon = sigma * (( (a + .5 - len(good)) / (llambda - len(good) - 1)))
                 forcedlatent = (1. - epsilon) * basic_new_fl + epsilon * np.random.randn(4*64*64)
                 coef =  np.sqrt(len(forcedlatent) / np.sum(forcedlatent**2))
                 forcedlatent = coef * forcedlatent
@@ -249,10 +250,10 @@ prompt = "A cyberpunk man next to a cyberpunk woman."
 prompt = "A smiling woman with a Katana and electronic patches."
 prompt = "Photo of a bearded, long-haired man with glasses and a blonde-haired woman. Both are smiling. Cats and drums and computers on shelves in the background."
 prompt = "Photo of a nuclear mushroom in Paris."
-prompt = "A photo of a cute woman with green hair, a red dress, and a gun. Futuristic backgroundd."
 prompt = "Three cute monsters."
 prompt = "A photo of a ninja holding a cucumber and facing a dinosaur."
 prompt = "A ninja fighting a dinosaur with a cucumber."
+prompt = "A photo of a cyberpunk cute woman with green hair, a red dress, and a gun. Futuristic backgroundd."
 print(f"The prompt is {prompt}")
 
 
@@ -477,6 +478,7 @@ if len(image_name) > 0:
     print(np.min(base_init_image.cpu().detach().numpy().flatten()))
     
     forcedlatents = []
+    latent_found = False
     try:
         latent_file = image_name + ".latent.txt"
         print(to_native(f"Trying to load latent variables in {latent_file}."))
@@ -694,18 +696,21 @@ for iteration in range(3000):   # Kind of an infinite loop.
                     scrn.blit(text4, (300, Y + 30))
                     pygame.display.flip()
                 elif pos[0] > 1500:  # Not in the images.
+                    print(to_native("Right hand panel."))
                     if pos[1] < Y/3:  # Reinitialize the clicks!
+                        print(to_native("Reinitialize clicks."))
                         indices = []
                         good = []
                         final_selection = []
                         final_selection_latent = []
+                        break
                     elif pos[1] < 2*Y/3:
+                        print(to_native("stop all"))
                         assert len(onlyfiles) == len(latent)
                         assert len(all_selected) == len(all_selected_latent)
                         stop_all(all_selected, all_selected_latent, final_selection, final_selection_latent) # + onlyfiles, all_selected_latent + latent)
                         exit()
-                    status = False
-                    break
+                        status = False
                 index = 3 * (pos[0] // 300) + (pos[1] // 300)
                 pygame.draw.circle(scrn, red, [pos[0], pos[1]], 13, 0)
                 if index <= max_created_index:  # The user has clicked on an image!
@@ -764,6 +769,8 @@ for iteration in range(3000):   # Kind of an infinite loop.
     os.environ["good"] = str(good)
     os.environ["bad"] = str(bad)
     numpy_images = [np.array(image) for image in images]
+    if len(np.unique([i[0] for i in indices])) == 1:
+       sigma = 0.7 * sigma
     forcedlatents += multi_combine(latent, indices, llambda)
     os.environ["good"] = "[]"
     os.environ["bad"] = "[]"
