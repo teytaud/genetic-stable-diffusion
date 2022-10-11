@@ -113,6 +113,7 @@ Output:
 #                outputs += [forcedlatent]
 #        else:
         if True:
+            ratio = np.random.randn()
             print(f"Voronoi in the latent space! {a} / {llambda}")
             forcedlatent = np.zeros((4, 64, 64))
             for i in range(64):
@@ -136,7 +137,7 @@ Output:
                         assert k < len(latent[uu]), k
                         assert i < len(latent[uu][k]), i
                         assert j < len(latent[uu][k][i]), j
-                        forcedlatent[k][i][j] = float(latent[uu][k][i][j] if (len(good_indices) < 2 or mindistances < 0.5 * np.min([mindistancesv[v] for v in range(len(mindistancesv)) if v != uu])) else np.random.randn())
+                        forcedlatent[k][i][j] = float(latent[uu][k][i][j] if (len(good_indices) < 2 or mindistances < ratio * np.min([mindistancesv[v] for v in range(len(mindistancesv)) if v != uu])) else np.random.randn())
             forcedlatent = forcedlatent.flatten()
             basic_new_fl = np.sqrt(len(forcedlatent) / np.sum(forcedlatent**2)) * forcedlatent
             if len(good_indices) > 1:
@@ -694,6 +695,7 @@ for iteration in range(3000):   # Kind of an infinite loop.
                     text4 = font.render(to_native(f"Ok! parameters changed!"), True, green, blue)
                     scrn.blit(text4, (300, Y + 30))
                     pygame.display.flip()
+                    break
                 elif pos[0] > 1500:  # Not in the images.
                     print(to_native("Right hand panel."))
                     if pos[1] < Y/3:  # Reinitialize the clicks!
@@ -708,8 +710,8 @@ for iteration in range(3000):   # Kind of an infinite loop.
                         assert len(onlyfiles) == len(latent)
                         assert len(all_selected) == len(all_selected_latent)
                         stop_all(all_selected, all_selected_latent, final_selection, final_selection_latent) # + onlyfiles, all_selected_latent + latent)
-                        exit()
                         status = False
+                        exit()
                 index = 3 * (pos[0] // 300) + (pos[1] // 300)
                 pygame.draw.circle(scrn, red, [pos[0], pos[1]], 13, 0)
                 if index <= max_created_index:  # The user has clicked on an image!
