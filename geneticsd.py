@@ -254,6 +254,8 @@ prompt = "Three cute monsters."
 prompt = "A photo of a ninja holding a cucumber and facing a dinosaur."
 prompt = "A ninja fighting a dinosaur with a cucumber."
 prompt = "A photo of a cyberpunk cute woman with green hair, a red dress, and a gun. Futuristic backgroundd."
+prompt = "A woman with many arms playing music."
+prompt = "Conan the Barbarian eating an ice-cream and a cotton candy."
 print(f"The prompt is {prompt}")
 
 
@@ -710,8 +712,8 @@ for iteration in range(3000):   # Kind of an infinite loop.
                         assert len(onlyfiles) == len(latent)
                         assert len(all_selected) == len(all_selected_latent)
                         stop_all(all_selected, all_selected_latent, final_selection, final_selection_latent) # + onlyfiles, all_selected_latent + latent)
-                        status = False
                         exit()
+                    status = False
                 index = 3 * (pos[0] // 300) + (pos[1] // 300)
                 pygame.draw.circle(scrn, red, [pos[0], pos[1]], 13, 0)
                 if index <= max_created_index:  # The user has clicked on an image!
@@ -739,7 +741,7 @@ for iteration in range(3000):   # Kind of an infinite loop.
                     text3 = pygame.transform.rotate(text3, 90)
                     scrn.blit(text3, (X*3/4+X/16+X/32 - X/32, Y*2/3))
                     pygame.display.flip()
-                else:
+                elif len(indices) == 0:
                     speak("Bad click ! Click on an image.")
                     pretty_print("Bad click! Click on image.")
     
