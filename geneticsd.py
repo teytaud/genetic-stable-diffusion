@@ -257,6 +257,7 @@ prompt = "A ninja fighting a dinosaur with a cucumber."
 prompt = "A photo of a cyberpunk cute woman with green hair, a red dress, and a gun. Futuristic backgroundd."
 prompt = "A woman with many arms playing music."
 prompt = "Conan the Barbarian eating an ice-cream and a cotton candy."
+prompt = "Conan the Barbarian hugs a Minion. There is a rainbow."
 print(f"The prompt is {prompt}")
 
 
@@ -373,6 +374,7 @@ def stop_all(list_of_files, list_of_latent, last_list_of_files, last_list_of_lat
         assert len(list_of_files) == len(list_of_latent)
         if "j" in answer or "J" in answer:
             list_of_latent = last_list_of_latent
+            list_of_files = last_list_of_files
         pretty_print("Let us create animations!")
         for c in sorted([0.0025, 0.005, 0.01, 0.02]):
             for idx in range(len(list_of_files)):
