@@ -167,8 +167,10 @@ latent = []
 images = []
 onlyfiles = []
 
+f = open("token.txt", "r")
+token = f.read()
 # Creating the main pipeline.
-pipe = StableDiffusionPipeline.from_pretrained(model_id, use_auth_token="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")
+pipe = StableDiffusionPipeline.from_pretrained(model_id, use_auth_token=token)
 pipe = pipe.to(device)
 
  
@@ -257,6 +259,7 @@ prompt = "A photo of a cyberpunk cute woman with green hair, a red dress, and a 
 prompt = "A woman with many arms playing music."
 prompt = "Conan the Barbarian eating an ice-cream and a cotton candy."
 prompt = "Conan the Barbarian hugs a Minion. There is a rainbow."
+prompt = "Close-up portrait with three eyes."
 print(f"The prompt is {prompt}")
 
 

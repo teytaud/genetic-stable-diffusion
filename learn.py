@@ -15,7 +15,7 @@ indices = list(range(num_samples))
 
 results = {}
 resultso = {}
-all_numbers = [5, 10, 20, 40, 80, 160, 320]
+all_numbers = [5, 10, 20]#, 40, 80, 160, 320]
 for n in all_numbers:
   #print(f"Wokring with training set of cardinal {n}")
   if n < num_samples:
@@ -57,7 +57,7 @@ for n in all_numbers:
                     if proba_f < proba_fail:
                         proba_fail = proba_f
                         idx = u
-                resultso[clf_str][n] += [Y[idx]]
+                resultso[clf_str][n] += [Ytest[idx]]
             except ValueError as e:
                 print(f"Pb with {clf_str}: {e}")
             except AttributeError as e:
