@@ -19,10 +19,11 @@ all_numbers = [5, 10, 20]#, 40, 80, 160, 320]
 for n in all_numbers:
   #print(f"Wokring with training set of cardinal {n}")
   if n < num_samples:
-     for _ in range(177):
+     for _ in range(17):
         train_indices = random.sample(indices, n)
         test_indices = [i for i in indices if i not in train_indices]
         assert len(test_indices) + len(train_indices) == num_samples
+        test_indices = random.sample(test_indices, len(test_indices) // 2)
         Xtrain = [X[i] for i in train_indices]
         Ytrain = [Y[i] for i in train_indices]
         Xtest = [X[i] for i in test_indices]
