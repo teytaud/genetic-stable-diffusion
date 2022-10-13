@@ -20,6 +20,6 @@ do
     echo "print(len(good))" >> goodbad.py
     echo "print(len(bad))" >> goodbad.py
     cat learn.py >> goodbad.py
-    python goodbad.py
+    python goodbad.py | tee results_debug_${v}.log
     mv goodbad.py goodbad_${v}.py
 done

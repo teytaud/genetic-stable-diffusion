@@ -15,11 +15,12 @@ indices = list(range(num_samples))
 
 results = {}
 resultso = {}
-all_numbers = [5, 10, 20]#, 40, 80, 160, 320]
+all_numbers = [5, 10, 20, 40, 80]#, 40, 80, 160, 320]
 for n in all_numbers:
-  #print(f"Wokring with training set of cardinal {n}")
+  print(f"Working with training set of cardinal {n}")
   if n < num_samples:
-     for _ in range(17):
+     for idx_run in range(37):
+        print(f"Run with index {idx_run}")
         train_indices = random.sample(indices, n)
         test_indices = [i for i in indices if i not in train_indices]
         assert len(test_indices) + len(train_indices) == num_samples
@@ -63,10 +64,11 @@ for n in all_numbers:
                 print(f"Pb with {clf_str}: {e}")
             except AttributeError as e:
                 print(f"{clf_str} does not provide probas.")
+            print("Current results dict: {results}")
+            print("Current resultso dict: {resultso}")
             
 
-for n in all_numbers:
-    for c in results:
+     for c in results:
       if n in results[c]:
         print(f"L-{pb} {n} {c} {np.sum(results[c][n]) / len(results[c][n])}")
         if len(resultso[c][n]) > 0:
