@@ -15,16 +15,16 @@ indices = list(range(num_samples))
 
 results = {}
 resultso = {}
-all_numbers = [5, 10, 20, 40, 80]#, 40, 80, 160, 320]
+all_numbers = [5, 10, 15, 20, 30, 40, 80, 120, 160]#, 40, 80, 160, 320]
 for n in all_numbers:
   print(f"Working with training set of cardinal {n}")
   if n < num_samples:
-     for idx_run in range(37):
+     for idx_run in range(177):
         print(f"Run with index {idx_run}")
         train_indices = random.sample(indices, n)
         test_indices = [i for i in indices if i not in train_indices]
         assert len(test_indices) + len(train_indices) == num_samples
-        test_indices = random.sample(test_indices, len(test_indices) // 2)
+        test_indices = random.sample(test_indices, (4 * len(test_indices)) // 5)
         Xtrain = [X[i] for i in train_indices]
         Ytrain = [Y[i] for i in train_indices]
         Xtest = [X[i] for i in test_indices]
