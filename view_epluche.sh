@@ -32,4 +32,4 @@ echo '\end{table}'
 ) > ltable.tex
 sed -i.tmp 's/[0-9]\.[0-9][0-9]/&PROUTPROUT/g' ltable.tex
 sed -i.tp 's/PROUTPROUT[0-9]*//g' ltable.tex
-open ltable.tex
+more ltable.tex

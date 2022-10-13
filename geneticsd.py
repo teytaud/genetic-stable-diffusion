@@ -168,7 +168,11 @@ images = []
 onlyfiles = []
 
 f = open("token.txt", "r")
-token = f.read()
+try:
+    token = str(f.read())[:37]
+    print(f"My token is {token}")
+except:
+    assert False, "You need a token from hugging face! Put it in the file token.txt"
 # Creating the main pipeline.
 pipe = StableDiffusionPipeline.from_pretrained(model_id, use_auth_token=token)
 pipe = pipe.to(device)
@@ -259,7 +263,8 @@ prompt = "A photo of a cyberpunk cute woman with green hair, a red dress, and a 
 prompt = "A woman with many arms playing music."
 prompt = "Conan the Barbarian eating an ice-cream and a cotton candy."
 prompt = "Conan the Barbarian hugs a Minion. There is a rainbow."
-prompt = "Close-up portrait with three eyes."
+prompt = "Close-up portrait with three eyes, including an eye on the forehead."
+prompt = "A caveman with medieval weapons in an oil station."
 print(f"The prompt is {prompt}")
 
 
