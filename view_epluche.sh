@@ -35,6 +35,10 @@ sed -i.tmp 's/[0-9]\.[0-9][0-9]/&PROUTPROUT/g' ltable.tex
 sed -i.tp 's/PROUTPROUT[0-9]*//g' ltable.tex
 
 
-grep Optim ltable.tex | egrep 'Random|Dec'
+echo Everything:
+grep Optim ltable.tex #| egrep 'Random|Dec'
+echo My favorite:
+grep Optim ltable.tex | egrep 'Random|LogisticRe.6'
+
 echo "open ltable.tex"
 
