@@ -1,5 +1,6 @@
 #!/bin/bash
 
+cat archive_results_*.txt > archive_results.txt
 (
 echo '%%%% DO NOT MODIFY: AUTOMATICALLY GENERATED.'
 echo '\begin{table}'
@@ -22,7 +23,7 @@ echo '\begin{tabular}{|c|c|c|c|}'
 echo '\hline'
 echo 'Problem & Train set & Tool & Perf\\'
 echo '\hline'
-grep '^O' archive_results.txt | sed 's/ / \& /g' | sed 's/$/\\\\/g' | cut -c 3- | sed 's/_/-/g' | awk '{ if ( $1 != prev ) { print "\\hline" ; print "\\end{tabular}\\end{minipage} \\\\ \\begin{minipage}{.33\\textwidth}\\begin{tabular}{|c|c|c|c|}\\hline" } print $0; prev = $1 }' | sed 's/majority/Random/g'
+grep '^O' archive_results.txt | sed 's/ / \& /g' | sed 's/$/\\\\/g' | cut -c 3- | sed 's/_/-/g' | awk '{ if ( $1 != prev ) { print "\\hline" ; print "\\end{tabular}\\end{minipage} \\\\ \\begin{minipage}{.33\\textwidth}\\begin{tabular}{|c|c|c|c|}\\hline" } print $0; prev = $1 }' | sed 's/majority/Random/g' | sed 's/$/\%\%Optim/g'
 echo '\hline'
 echo '\end{tabular}'
 echo '\end{minipage}'
@@ -32,4 +33,8 @@ echo '\end{table}'
 ) > ltable.tex
 sed -i.tmp 's/[0-9]\.[0-9][0-9]/&PROUTPROUT/g' ltable.tex
 sed -i.tp 's/PROUTPROUT[0-9]*//g' ltable.tex
-more ltable.tex
+
+
+grep Optim ltable.tex | egrep 'Random|Dec'
+echo "open ltable.tex"
+
