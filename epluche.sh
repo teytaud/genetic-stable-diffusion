@@ -2,7 +2,7 @@
 touch archive_results_pouet.txt
 rm archive_results_*.txt
 (
-for u in `ls toto*.txt | grep "${1:-.}" | gshuf`
+for u in `ls -ctr toto*.txt | grep "${1:-.}" `
 do
     while [ `jobs | grep Running | wc -l` -ge 3 ]
     do

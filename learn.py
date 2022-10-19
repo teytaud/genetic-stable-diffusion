@@ -7,7 +7,7 @@ import numpy as np
 
 s = np.random.randint(5000)
 def short(x):
-    x = np.array(x).reshape((4, 64, 64))
+    x = np.array(x).reshape((4, 8, 8))
     y = np.zeros((4,64,64))
     for u in range(4):
         for v in range(64):
@@ -29,17 +29,17 @@ ratio = len(indices1) / len(indices)
 results = {}
 resultso = {}
 all_numbers = sorted([5, 10, 15, 20, 30, 40, 60, 80, 100, 120, 140, 160], reverse=True)#, 40, 80, 160, 320]
-all_numbers = sorted([5, 10, 15, 20, 30, 150], reverse=True)#, 40, 80, 160, 320]
+all_numbers = [20, 30, 40, 150] #sorted([5, 10, 15, 20, 30, 150], reverse=True)#, 40, 80, 160, 320]
 for n in all_numbers:
-  if n < num_samples / 2 and n < 100:
-     continue
+  #if n < num_samples / 2 and n < 100:
+  #   continue
   if n < num_samples:
      #n1 = int(ratio * n)
      #if n1 >= len(indices1):
      #    continue
      #if n-n1 >= len(indices0):
      #    continue
-   for idx_run in range(27):
+   for idx_run in range(222):
     print(f"Run with index {idx_run}")
     train_indices = random.sample(indices, n)
     Xtrain = [X[i] for i in train_indices]
